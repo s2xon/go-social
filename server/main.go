@@ -13,7 +13,9 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func AccessTokenHandler(w http.ResponseWriter, r *http.Request) {
-	fb.AccessToken(r)
+	user := fb.AccessToken(r)
+
+	fmt.Println(user.Access_Token)
 }
 
 func main() {
