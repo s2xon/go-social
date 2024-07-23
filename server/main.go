@@ -11,7 +11,6 @@ import (
 var User *fb.User
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "../static")
 
 	if User != nil {
 		fmt.Println("I STORE THE VARIABLE HERE", User)
@@ -20,6 +19,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fb.Login(), http.StatusSeeOther)
+
 }
 
 func AccessTokenHandler(w http.ResponseWriter, r *http.Request) {
@@ -29,10 +29,18 @@ func AccessTokenHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
+func FaceBookImageHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("hello server")
+}
+
 func main() {
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("../static/"))))
 	http.HandleFunc("/", Handler)
 	http.HandleFunc("/login", LoginHandler)
 	http.HandleFunc("/facebook_redirect", AccessTokenHandler)
+
+	http.HandleFunc("/facebook_upload_image", FaceBookImageHandler)
+
 	fmt.Println("Starting server @ https://localhost:8080")
 	log.Fatal(http.ListenAndServeTLS(":8080", "../certificates/localhost.pem", "../certificates/localhost-key.pem", nil))
 
