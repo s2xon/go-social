@@ -8,20 +8,29 @@ import (
 	"root/server/api/facebook"
 )
 
+var User *fb.User
+
+func Handler(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "../static")
+
+	if User != nil {
+		fmt.Println("I STORE THE VARIABLE HERE", User)
+	}
+}
+
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fb.Login(), http.StatusSeeOther)
 }
 
 func AccessTokenHandler(w http.ResponseWriter, r *http.Request) {
-	user := fb.AccessToken(r)
+	User = fb.AccessToken(r)
 
-	fmt.Println(user.Access_Token)
+	fmt.Println("here is the user atkn", User)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func main() {
-	fs := http.FileServer(http.Dir("../static"))
-	http.Handle("/", fs)
-
+	http.HandleFunc("/", Handler)
 	http.HandleFunc("/login", LoginHandler)
 	http.HandleFunc("/facebook_redirect", AccessTokenHandler)
 	fmt.Println("Starting server @ https://localhost:8080")

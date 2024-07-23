@@ -3,24 +3,25 @@ package fb
 import (
 	"encoding/json"
 	"fmt"
-	"io"
+	// "io"
 	"log"
 	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
 	"strconv"
-	"strings"
+	//"strings"
 
 	"github.com/joho/godotenv"
 )
 
 type User struct {
-	Access_Token string `json:"access_token"`
+Access_Token string `json:"access_token"`
+Token_Type   string `json:"token_type"`
+	Expires_in   int    `json:"expires_in"`
 }
 
 func Login() string {
-	fmt.Println("-----------------loginhere--------------------")
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("error loading .env file")
@@ -46,6 +47,8 @@ func Login() string {
 }
 
 func AccessToken(r *http.Request) *User {
+	fmt.Println("running access token function------------------------------------------------------")
+
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("error loading .env file")
@@ -55,7 +58,7 @@ func AccessToken(r *http.Request) *User {
 	if err != nil {
 		log.Fatal(err)
 	}
-  fmt.Println(u)
+	fmt.Println(u)
 	m, _ := url.ParseQuery(u.RawQuery)
 	code := m["code"][0]
 
@@ -83,24 +86,15 @@ func AccessToken(r *http.Request) *User {
 	}
 	defer resp.Body.Close()
 
-	buf := new(strings.Builder)
-	n, err := io.Copy(buf, resp.Body)
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(n)
-	fmt.Println(buf.String())
+	user := &User{}
 
-	var user *User
-	body, err := io.ReadAll(resp.Body)
+	err = json.NewDecoder(resp.Body).Decode(&user)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		fmt.Println(err.Error())
+		return nil
 	}
 
-	err = json.Unmarshal(body, user)
-	if err != nil {
-		panic(err)
-	}
 	return user
 }
 
