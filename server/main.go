@@ -2,9 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"net/http"
-	"os"
 
 	//"fmt"
 	"log"
@@ -35,28 +33,7 @@ func AccessTokenHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func ImageHandler(w http.ResponseWriter, r *http.Request) {
-	file, handler, err := r.FormFile("fileToUpload")
-	if err != nil {
-		log.Println("error retrieving file", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer file.Close()
-	fmt.Println("1")
-	dst, err := os.Create(handler.Filename)
-	if err != nil {
-		log.Println("error creating file", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	defer dst.Close()
-	fmt.Println("1")
-
-	if _, err := io.Copy(dst, file); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	fmt.Fprintf(w, "uploaded file")
+	fb.Upload(r, User.Access_Token)
 }
 
 func main() {

@@ -1,24 +1,30 @@
 package fb
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	// "io"
+	"image"
+	"image/png"
+	"io"
 	"log"
 	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
 	"strconv"
-	//"strings"
 
 	"github.com/joho/godotenv"
 )
 
 type User struct {
-Access_Token string `json:"access_token"`
-Token_Type   string `json:"token_type"`
+	Access_Token string `json:"access_token"`
+	Token_Type   string `json:"token_type"`
 	Expires_in   int    `json:"expires_in"`
+}
+
+type UploadSession struct {
+	ID string `json:"id"`
 }
 
 func Login() string {
@@ -98,6 +104,92 @@ func AccessToken(r *http.Request) *User {
 	return user
 }
 
-// func Upload() {
-//
-//}
+func Upload(r *http.Request, access_token string) {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("error loading .env file")
+	}
+
+	imgBytes, _, err := r.FormFile("fileToUpload")
+	if err != nil {
+		fmt.Println("IMAGE ERROR")
+		panic(err.Error())
+	}
+
+	img, _, err := image.Decode(imgBytes)
+	if err != nil {
+		panic(err)
+	}
+
+	s := "https://graph.facebook.com/v20.0/<APP_ID>/uploads?file_name=<FILE_NAME>&file_length=<FILE_LENGTH>&file_type=<FILE_TYPE>&access_token=<USER_ACCESS_TOKEN>"
+
+	u, err := url.Parse(s)
+	if err != nil {
+		panic(err)
+	}
+
+	u.Path = fmt.Sprintf("v20.0/%s/uploads", os.Getenv("FB_ID"))
+
+	q := u.Query()
+	q.Set("file_name", "fileToUpload")
+	q.Set("file_length", "1000")
+	q.Set("file_type", "image/png")
+	q.Set("access_token", access_token)
+	u.RawQuery = q.Encode()
+
+	fmt.Println(u.String())
+
+	req, err := http.NewRequest("POST", u.String(), nil)
+	if err != nil {
+		panic(err)
+	}
+	clinet := http.Client{}
+
+	resp, err := clinet.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	uploadSession := &UploadSession{}
+
+	err = json.NewDecoder(resp.Body).Decode(&uploadSession)
+	if err != nil {
+		fmt.Println(err)
+		fmt.Println(err.Error())
+	}
+
+	s = fmt.Sprintf("https://graph.facebook.com/v20.0/%s", uploadSession.ID)
+
+	var buf bytes.Buffer
+
+	err = png.Encode(&buf, img)
+	if err != nil {
+		panic(err)
+	}
+
+	req, err = http.NewRequest("POST", s, &buf)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("HERE IS THE ACCESS TOKEN FOR THE UPLOAD", access_token)
+
+	req.Header.Set("Authorization", "OAuth "+access_token)
+	req.Header.Set("file_offset", "0")
+
+	clinet = http.Client{}
+
+	resp, err = clinet.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	read, err := io.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(read))
+
+}

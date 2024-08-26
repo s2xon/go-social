@@ -15,18 +15,19 @@
 
     <h1>Upload Files Here</h1>
 
-    <form action="facebookUpload" enctype="multipart/form-data" method="post">
+    <form onsubmit="return uploadImage(event)" enctype="multipart/form-data">
       <label class="custom-uploader" for="file">Upload Your File</label>
       <input
         id="file"
         accept="image/jpeg,image/gif,image/png,application/pdf,image/x-eps"
         name="fileToUpload"
         type="file"
+        name="file"
       />
       <button class="btn btn-success" name="submit" type="submit">
         Upload File
       </button>
     </form>
-    <script src="./index.js"></script>
+    <script src="https://localhost:8080/static/index.js"></script>
   </body>
 </html>
